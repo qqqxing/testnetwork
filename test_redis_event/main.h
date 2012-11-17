@@ -18,7 +18,6 @@ typedef struct a_buf {
 	int buf_len;
 	int writepos;
 	struct a_buf * next;
-
 } buffer;
 
 typedef struct rclient {

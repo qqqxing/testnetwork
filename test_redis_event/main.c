@@ -29,11 +29,18 @@ void oom(const char *msg) {
 	abort();
 }
 
+
+void free_buffer(buffer * b){
+	free(b->buf);
+	free(b);
+}
+
+
 void sendReplyToClient(aeEventLoop *el, int fd, void *privdata, int mask) {
 	redisClient *c = privdata;
 	int nwritten = 0;
 
-	buffer *p, *q;
+	buffer *p, *q,*f;
 	p = c->head;
 	while (p != NULL) {
 		q = p;
@@ -71,6 +78,7 @@ void sendReplyToClient(aeEventLoop *el, int fd, void *privdata, int mask) {
 		//flag == 0 ,write EAGAIN
 		//flag == 2, write finished.
 		if(flag == 2){
+			f = p;
 			p = q->next;
 			c->head = p;
 			if(c->head == NULL){
@@ -78,6 +86,7 @@ void sendReplyToClient(aeEventLoop *el, int fd, void *privdata, int mask) {
 				c->writting = 0;
 				aeDeleteFileEvent(server.el,c->fd,AE_WRITABLE);
 			}
+			free_buffer(f);
 		}else{
 			// EAGAIN
 			break;
@@ -158,7 +167,7 @@ void readQueryFromClient(aeEventLoop *el, int fd, void *privdata, int mask) {
 		freeClient(c);
 		return;
 	}
-	printf("[Read length]: %d\n", nread);
+//	printf("[Read length]: %d\n", nread);
 	add_buffer_to_client(c, buf, nread);
 	c->total_read += nread;
 
